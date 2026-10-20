@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LUMEN — клиника премиальной эстетической косметологии</title>
+<meta name="description" content="LUMEN — клиника эстетической косметологии. Инъекционные и аппаратные методики, индивидуальный план ухода, консультация врача перед каждой процедурой.">
+<meta name="theme-color" content="#FBF8F4">
+
+<!-- Шрифты: Cormorant Garamond (заголовки) и Montserrat (текст) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Montserrat:wght@300;400;500;600&display=swap&subset=cyrillic" rel="stylesheet">
+
+<!-- Tailwind CSS через CDN + собственная палитра -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          pearl:  '#FBF8F4',   // жемчужно-белый фон
+          powder: '#F4DDD8',   // пудра
+          rose:   '#E8BDB5',   // тёплая роза
+          beige:  '#EFE5D9',   // тёплый беж
+          sand:   '#DCCBB8',   // песок
+          ink:    '#2B2B2E',   // графит (текст)
+          mute:   '#6E6A6C'    // приглушённый текст
+        },
+        fontFamily: {
+          serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+          sans:  ['Montserrat', 'system-ui', 'sans-serif']
+        },
+        transitionTimingFunction: { lumen: 'cubic-bezier(.65,0,.35,1)' }
+      }
+    }
+  }
+</script>
+
+<style>
+  /* ------------------------------------------------------------------
+     Кастомный CSS: только сложные анимации и нестандартные элементы
+     ------------------------------------------------------------------ */
+  html { scroll-behavior:smooth; scroll-padding-top:96px; }
+  body { background:#FBF8F4; color:#2B2B2E; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
+  ::selection { background:#E8BDB5; color:#2B2B2E; }
+
+  /* Скрываем полосу прокрутки у горизонтальных списков */
+  .no-scrollbar { scrollbar-width:none; -ms-overflow-style:none; }
+  .no-scrollbar::-webkit-scrollbar { display:none; }
+
+  :focus-visible { outline:2px solid #2B2B2E; outline-offset:4px; border-radius:6px; }
+
+  /* Шапка: прозрачная → матовое стекло */
+  #header { transition:background-color .8s cubic-bezier(.65,0,.35,1), box-shadow .8s cubic-bezier(.65,0,.35,1), backdrop-filter .8s; }
+  #header.is-stuck { background:rgba(251,248,244,.7); -webkit-backdrop-filter:blur(18px) saturate(1.5); backdrop-filter:blur(18px) saturate(1.5);
+                     box-shadow:0 1px 0 rgba(43,43,46,.08); }
+
+  /* Бургер: две линии превращаются в крест */
+  .burger span { display:block; height:1px; width:26px; background:#2B2B2E; transition:transform .7s cubic-bezier(.65,0,.35,1); }
+  .burger span + span { margin-top:8px; }
+  .burger[aria-expanded="true"] span:first-child { transform:translateY(4.5px) rotate(45deg); }
+  .burger[aria-expanded="true"] span:last-child  { transform:translateY(-4.5px) rotate(-45deg); }
+
+  /* Мобильное меню: раскрытие круговой маской из угла */
+  #menu { clip-path:circle(0% at calc(100% - 44px) 38px); visibility:hidden;
+          transition:clip-path .9s cubic-bezier(.65,0,.35,1), visibility 0s linear .9s; }
+  #menu.open { clip-path:circle(150% at calc(100% - 44px) 38px); visibility:visible; transition-delay:0s; }
+  #menu .m-link { opacity:0; transform:translateY(24px); transition:opacity .8s cubic-bezier(.65,0,.35,1), transform .8s cubic-bezier(.65,0,.35,1); }
+  #menu.open .m-link { opacity:1; transform:none; transition-delay:calc(.25s + var(--i) * .08s); }
+
+  /* Появление первого экрана */
+  @keyframes fadeUp { from { opacity:0; transform:translateY(34px); } to { opacity:1; transform:none; } }
+  .fade-up { opacity:0; animation:fadeUp 1.3s cubic-bezier(.65,0,.35,1) forwards; animation-delay:var(--d,0s); }
+
+  /* Появление при скролле (Intersection Observer) */
+  .js [data-reveal] { opacity:0; transform:translateY(32px); transition:opacity 1.1s cubic-bezier(.65,0,.35,1), transform 1.1s cubic-bezier(.65,0,.35,1); transition-delay:var(--d,0s); }
+  .js [data-reveal].in { opacity:1; transform:none; }
+
+  /* Вращающаяся надпись */
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .spin { animation:spin 28s linear infinite; }
+
+  /* Карта красоты */
+  .zone { cursor:pointer; outline:none; }
+  .zone .z-shape { fill:rgba(232,189,181,0); stroke:rgba(43,43,46,0); stroke-width:1.2; stroke-dasharray:3 4;
+                   transition:fill .8s cubic-bezier(.65,0,.35,1), stroke .8s cubic-bezier(.65,0,.35,1); }
+  .zone.active .z-shape { fill:rgba(232,189,181,.5); stroke:rgba(43,43,46,.4); }
+  .zone .z-dot { fill:#FBF8F4; stroke:#2B2B2E; stroke-width:1; transition:fill .6s cubic-bezier(.65,0,.35,1), r .6s cubic-bezier(.65,0,.35,1); }
+  .zone.active .z-dot { fill:#E8BDB5; }
+  .zone .z-num { font:500 9.5px Montserrat,sans-serif; fill:#2B2B2E; pointer-events:none; }
+  .zone .z-ring { fill:none; stroke:#2B2B2E; stroke-width:1; opacity:0; transform-box:fill-box; transform-origin:center; }
+  @keyframes ring { 0% { transform:scale(.7); opacity:.55; } 100% { transform:scale(2.3); opacity:0; } }
+  .zone.active .z-ring { animation:ring 2.4s cubic-bezier(.65,0,.35,1) infinite; }
+  .zone:focus-visible .z-shape { stroke:rgba(43,43,46,.8); }
+  .swap { opacity:0; transform:translateY(12px); }
+  .swap-t { transition:opacity .35s cubic-bezier(.65,0,.35,1), transform .35s cubic-bezier(.65,0,.35,1); }
+
+  /* Карточки услуг: фильтрация через opacity + transform */
+  .svc { transition:opacity .45s cubic-bezier(.65,0,.35,1), transform .45s cubic-bezier(.65,0,.35,1), box-shadow .7s cubic-bezier(.65,0,.35,1); transition-delay:var(--sd,0s); }
+  .svc.is-out { opacity:0; transform:translateY(18px) scale(.985); transition-delay:0s; }
+  .svc:hover { box-shadow:0 30px 60px -30px rgba(43,43,46,.28); }
+
+  /* Плавающие подписи в форме */
+  .f-line { position:relative; }
+  .f-line::after { content:""; position:absolute; left:0; bottom:0; height:1px; width:100%; background:#2B2B2E; transform:scaleX(0); transform-origin:left; transition:transform .8s cubic-bezier(.65,0,.35,1); }
+  .f-line:focus-within::after { transform:scaleX(1); }
+  select.f-select { background-image:none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior:auto; }
+    *, *::before, *::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+    .fade-up { opacity:1; }
+    .js [data-reveal] { opacity:1; transform:none; }
+  }
+</style>
+</head>
+
+<body class="font-sans text-ink/85 antialiased">
+<script>document.documentElement.classList.add('js');</script>
+
+<a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:bg-ink focus:text-pearl focus:px-4 focus:py-2 focus:rounded-full">Перейти к содержимому</a>
+
+<!-- ============================== HEADER ============================== -->
+<header id="header" class="fixed inset-x-0 top-0 z-50">
+  <div class="mx-auto max-w-[1400px] px-5 md:px-10 h-[76px] md:h-[88px] flex items-center justify-between">
+    <a href="#top" class="font-serif text-[26px] md:text-[30px] font-medium tracking-[.34em] text-ink" aria-label="LUMEN — на главную">LUMEN</a>
+
+    <nav class="hidden lg:flex items-center gap-11 text-[13px] tracking-[.04em]" aria-label="Основная навигация">
+      <a class="nav-a relative after:absolute after:left-0 after:-bottom-1.5 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-ink after:transition-transform after:duration-700 after:ease-lumen hover:after:scale-x-100" href="#map">Карта красоты</a>
+      <a class="nav-a relative after:absolute after:left-0 after:-bottom-1.5 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-ink after:transition-transform after:duration-700 after:ease-lumen hover:after:scale-x-100" href="#services">Услуги</a>
+      <a class="nav-a relative after:absolute after:left-0 after:-bottom-1.5 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-ink after:transition-transform after:duration-700 after:ease-lumen hover:after:scale-x-100" href="#results">До и после</a>
+      <a class="nav-a relative after:absolute after:left-0 after:-bottom-1.5 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-ink after:transition-transform after:duration-700 after:ease-lumen hover:after:scale-x-100" href="#contacts">Контакты</a>
+    </nav>
+
+    <div class="flex items-center gap-5">
+      <a href="#booking" class="hidden sm:inline-flex items-center rounded-full bg-ink text-pearl text-[13px] tracking-[.04em] px-6 py-3 transition-colors duration-700 ease-lumen hover:bg-rose hover:text-ink">Записаться</a>
+      <button id="burger" class="burger lg:hidden relative z-[60] p-2 -mr-2" aria-label="Открыть меню" aria-expanded="false" aria-controls="menu"><span></span><span></span></button>
+    </div>
+  </div>
+</header>
+
+<!-- Мобильное меню -->
+<div id="menu" class="fixed inset-0 z-[55] bg-pearl lg:hidden" aria-hidden="true">
+  <div class="h-full flex flex-col justify-center px-8">
+    <nav class="flex flex-col gap-5" aria-label="Мобильная навигация">
+      <a class="m-link font-serif text-5xl font-light" style="--i:0" href="#map">Карта красоты</a>
+      <a class="m-link font-serif text-5xl font-light" style="--i:1" href="#services">Услуги</a>
+      <a class="m-link font-serif text-5xl font-light" style="--i:2" href="#results">До и после</a>
+      <a class="m-link font-serif text-5xl font-light" style="--i:3" href="#contacts">Контакты</a>
+    </nav>
+    <a class="m-link mt-12 inline-flex self-start rounded-full bg-ink text-pearl px-8 py-4 text-sm tracking-[.04em]" style="--i:4" href="#booking">Записаться</a>
+  </div>
+</div>
+
+<main id="main">
+
+<!-- ============================== HERO ============================== -->
+<section id="top" class="relative overflow-hidden pt-28 md:pt-36 pb-20 md:pb-28">
+  <!-- Тонкие концентрические линии на фоне -->
+  <svg class="absolute -right-40 top-10 w-[900px] h-[900px] pointer-events-none opacity-70" viewBox="0 0 900 900" fill="none" aria-hidden="true">
+    <circle cx="450" cy="450" r="440" stroke="#2B2B2E" stroke-opacity=".07"/><circle cx="450" cy="450" r="340" stroke="#2B2B2E" stroke-opacity=".07"/><circle cx="450" cy="450" r="240" stroke="#2B2B2E" stroke-opacity=".07"/>
+  </svg>
+
+  <div class="relative mx-auto max-w-[1400px] px-5 md:px-10 grid lg:grid-cols-12 gap-14 lg:gap-8 items-center">
+    <div class="lg:col-span-7">
+      <p class="fade-up text-[12px] md:text-[13px] tracking-[.18em] text-mute" style="--d:.1s">Клиника эстетической косметологии</p>
+      <h1 class="fade-up mt-6 font-serif font-light text-[52px] leading-[.98] tracking-[-.01em] sm:text-7xl lg:text-[104px]" style="--d:.25s">
+        Свет, который <em class="italic font-light text-[#B97F78]">остаётся</em> с&nbsp;вами
+      </h1>
+      <p class="fade-up mt-8 max-w-[520px] text-[15px] md:text-base leading-[1.8] text-ink/70" style="--d:.45s">
+        Деликатные инъекционные и аппаратные методики с&nbsp;понятным планом ухода. Подбираем только то, что действительно нужно вашей коже, и&nbsp;ничего лишнего.
+      </p>
+      <div class="fade-up mt-10 flex flex-wrap items-center gap-x-8 gap-y-5" style="--d:.6s">
+        <a href="#booking" class="group inline-flex items-center gap-4 rounded-full bg-ink text-pearl pl-8 pr-3 py-3 text-[14px] tracking-[.03em] transition-colors duration-700 ease-lumen hover:bg-rose hover:text-ink">
+          Записаться на консультацию
+          <span class="grid place-items-center w-10 h-10 rounded-full bg-pearl text-ink transition-transform duration-700 ease-lumen group-hover:translate-x-1">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </span>
+        </a>
+        <a href="#map" class="text-[14px] tracking-[.03em] border-b border-ink/30 pb-1 transition-colors duration-700 ease-lumen hover:border-ink">Открыть карту красоты</a>
+      </div>
+
+      <dl class="fade-up mt-16 md:mt-20 grid sm:grid-cols-3 gap-x-8 gap-y-6 border-t border-ink/10 pt-7 max-w-[760px]" style="--d:.8s">
+        <div><dt class="font-serif text-2xl font-light">Врач</dt><dd class="mt-1 text-[13px] leading-relaxed text-mute">консультирует перед каждой процедурой</dd></div>
+        <div><dt class="font-serif text-2xl font-light">Сертификаты</dt><dd class="mt-1 text-[13px] leading-relaxed text-mute">на все препараты и оборудование</dd></div>
+        <div><dt class="font-serif text-2xl font-light">План ухода</dt><dd class="mt-1 text-[13px] leading-relaxed text-mute">составляем индивидуально</dd></div>
+      </dl>
+    </div>
+
+    <div class="lg:col-span-5 relative mx-auto w-full max-w-[440px] fade-up" style="--d:.5s">
+      <!-- Арочная рамка -->
+      <div id="hero-art" class="relative aspect-[4/5] overflow-hidden rounded-t-full rounded-b-[36px] bg-powder shadow-[0_50px_90px_-50px_rgba(43,43,46,.35)]"></div>
+      <!-- Вращающаяся печать -->
+      <div class="absolute -left-5 bottom-14 md:-left-14 w-28 h-28 md:w-36 md:h-36 grid place-items-center rounded-full bg-pearl/85" style="backdrop-filter:blur(6px)">
+        <svg class="spin absolute inset-0 w-full h-full" viewBox="0 0 120 120" aria-hidden="true">
+          <defs><path id="ring-text" d="M60 60 m-44 0 a44 44 0 1 1 88 0 a44 44 0 1 1 -88 0"/></defs>
+          <text font-size="8.6" fill="#2B2B2E" font-family="Montserrat, sans-serif" letter-spacing="2.4"><textPath href="#ring-text" textLength="268" lengthAdjust="spacing">LUMEN · ЭСТЕТИЧЕСКАЯ КЛИНИКА · </textPath></text>
+        </svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2B2B2E" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== КАРТА КРАСОТЫ ============================== -->
+<section id="map" class="py-20 md:py-32">
+  <div class="mx-auto max-w-[1400px] px-5 md:px-10">
+    <div class="grid lg:grid-cols-12 gap-6 md:gap-10 items-end" data-reveal>
+      <h2 class="lg:col-span-7 font-serif font-light text-[44px] leading-[1] sm:text-6xl lg:text-[84px] tracking-[-.01em]">Карта <em class="italic text-[#B97F78]">красоты</em></h2>
+      <p class="lg:col-span-5 text-[15px] leading-[1.8] text-ink/70 max-w-md">Наведите на&nbsp;зону лица&nbsp;— покажем, какие процедуры подходят ей лучше всего. Точный план врач составит на&nbsp;консультации.</p>
+    </div>
+
+    <div class="mt-12 md:mt-16 grid lg:grid-cols-12 gap-6 lg:gap-10" data-reveal>
+      <!-- Лицо -->
+      <div class="lg:col-span-5 min-w-0">
+        <div class="relative rounded-[40px] md:rounded-[56px] bg-gradient-to-b from-powder/70 to-beige/80 p-4 md:p-8">
+          <svg id="face" viewBox="0 0 400 540" class="w-full max-w-[420px] mx-auto block" role="group" aria-label="Схема лица с зонами процедур"></svg>
+        </div>
+      </div>
+
+      <!-- Описание зоны -->
+      <div class="lg:col-span-7 min-w-0 flex flex-col justify-between rounded-[40px] md:rounded-[56px] border border-ink/10 p-7 md:p-12">
+        <div id="zone-tabs" role="tablist" aria-label="Зоны лица" class="no-scrollbar flex gap-2 overflow-x-auto -mx-1 px-1 pb-1"></div>
+
+        <div id="zone-panel" class="swap-t mt-10 md:mt-14 min-h-[330px]" aria-live="polite">
+          <p id="zone-num" class="font-serif italic text-3xl text-[#B97F78]"></p>
+          <h3 id="zone-title" class="mt-1 font-serif font-light text-5xl md:text-7xl leading-none"></h3>
+          <p id="zone-text" class="mt-6 max-w-xl text-[15px] leading-[1.85] text-ink/70"></p>
+          <ul id="zone-procs" class="mt-8 border-t border-ink/10"></ul>
+        </div>
+
+        <p class="mt-8 text-[12px] leading-relaxed text-mute">Показания и противопоказания определяет врач на очной консультации.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== УСЛУГИ ============================== -->
+<section id="services" class="py-20 md:py-32 bg-beige/45">
+  <div class="mx-auto max-w-[1400px] px-5 md:px-10">
+    <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8" data-reveal>
+      <h2 class="font-serif font-light text-[44px] leading-[1] sm:text-6xl lg:text-[84px] tracking-[-.01em]">Услуги</h2>
+
+      <!-- Вкладки со скользящим индикатором -->
+      <div class="no-scrollbar overflow-x-auto -mx-5 px-5 md:mx-0 md:px-0">
+        <div id="svc-tabs" role="tablist" aria-label="Категории услуг" class="relative inline-flex rounded-full border border-ink/12 bg-pearl/70 p-1.5 whitespace-nowrap">
+          <span id="svc-ind" class="absolute top-1.5 bottom-1.5 left-0 rounded-full bg-ink transition-all duration-700 ease-lumen" style="width:0"></span>
+        </div>
+      </div>
+    </div>
+
+    <div id="svc-grid" role="tabpanel" class="mt-12 md:mt-16 grid sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5"></div>
+    <p class="mt-8 text-[12px] text-mute">Цены ориентировочные и зависят от препарата, зоны и объёма. Точную стоимость назовёт врач.</p>
+  </div>
+</section>
+
+<!-- ============================== ДО / ПОСЛЕ ============================== -->
+<section id="results" class="py-20 md:py-32">
+  <div class="mx-auto max-w-[1400px] px-5 md:px-10 grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+    <div class="lg:col-span-5" data-reveal>
+      <h2 class="font-serif font-light text-[44px] leading-[1] sm:text-6xl lg:text-[84px] tracking-[-.01em]">До&nbsp;и&nbsp;<em class="italic text-[#B97F78]">после</em></h2>
+      <p class="mt-8 max-w-md text-[15px] leading-[1.85] text-ink/70">Потяните ползунок, чтобы сравнить. Мы&nbsp;не&nbsp;обещаем другое лицо&nbsp;— только свежее, отдохнувшее и&nbsp;ваше.</p>
+      <ul class="mt-8 flex flex-wrap gap-2 text-[12px] tracking-[.03em]">
+        <li class="rounded-full border border-ink/15 px-4 py-2">Биоревитализация</li>
+        <li class="rounded-full border border-ink/15 px-4 py-2">Мезотерапия</li>
+        <li class="rounded-full border border-ink/15 px-4 py-2">Скульптурный массаж</li>
+      </ul>
+      <p class="mt-10 text-[12px] leading-relaxed text-mute max-w-sm">Иллюстрация. Результаты индивидуальны и зависят от исходного состояния кожи. Фото реальных пациентов публикуются только с их согласия.</p>
+    </div>
+
+    <div class="lg:col-span-7" data-reveal style="--d:.15s">
+      <div id="ba" class="relative aspect-[4/5] w-full max-w-[560px] mx-auto overflow-hidden rounded-[36px] md:rounded-[48px] select-none cursor-ew-resize touch-pan-y bg-powder"
+           role="slider" tabindex="0" aria-label="Сравнение до и после" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" style="--pos:50%">
+        <div id="ba-before" class="absolute inset-0"></div>
+        <div id="ba-after" class="absolute inset-0" style="clip-path:inset(0 0 0 var(--pos))"></div>
+        <div class="absolute inset-y-0 w-px bg-white/90 pointer-events-none" style="left:var(--pos)">
+          <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 grid place-items-center w-14 h-14 rounded-full bg-white/80 text-ink shadow-[0_12px_30px_-10px_rgba(43,43,46,.35)]" style="backdrop-filter:blur(8px)">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg>
+          </span>
+        </div>
+        <span class="absolute left-4 top-4 rounded-full bg-pearl/75 px-4 py-1.5 text-[11px] tracking-[.12em] pointer-events-none" style="backdrop-filter:blur(8px)">ДО</span>
+        <span class="absolute right-4 top-4 rounded-full bg-pearl/75 px-4 py-1.5 text-[11px] tracking-[.12em] pointer-events-none" style="backdrop-filter:blur(8px)">ПОСЛЕ</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== ЗАПИСЬ ============================== -->
+<section id="booking" class="pb-20 md:pb-32">
+  <div class="mx-auto max-w-[1400px] px-5 md:px-10">
+    <div class="rounded-[40px] md:rounded-[64px] bg-gradient-to-br from-powder/80 via-beige to-beige p-7 sm:p-10 md:p-16 grid lg:grid-cols-12 gap-12 lg:gap-16" data-reveal>
+      <div class="lg:col-span-5">
+        <h2 class="font-serif font-light text-[44px] leading-[1] sm:text-6xl lg:text-[76px] tracking-[-.01em]">Запишитесь на <em class="italic text-[#B97F78]">консультацию</em></h2>
+        <p class="mt-8 max-w-md text-[15px] leading-[1.85] text-ink/70">Оставьте номер, и администратор перезвонит в течение дня, чтобы подобрать удобное время.</p>
+        <p class="mt-10 text-[12px] text-mute">Звонок бесплатный и ни&nbsp;к&nbsp;чему не&nbsp;обязывает.</p>
+      </div>
+
+      <form id="lead-form" class="lg:col-span-7 grid gap-9 content-start" novalidate>
+        <div>
+          <div class="f-line">
+            <input id="f-name" name="name" type="text" autocomplete="name" placeholder=" " class="peer w-full bg-transparent border-0 border-b border-ink/25 pt-7 pb-3 text-lg outline-none">
+            <label for="f-name" class="pointer-events-none absolute left-0 top-6 text-mute transition-all duration-500 ease-lumen peer-focus:-translate-y-6 peer-focus:text-[11px] peer-[:not(:placeholder-shown)]:-translate-y-6 peer-[:not(:placeholder-shown)]:text-[11px]">Имя</label>
+          </div>
+          <p class="err mt-2 hidden text-[12px] text-[#A8504A]" data-for="f-name">Введите имя</p>
+        </div>
+
+        <div>
+          <div class="f-line">
+            <input id="f-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder=" " class="peer w-full bg-transparent border-0 border-b border-ink/25 pt-7 pb-3 text-lg outline-none">
+            <label for="f-phone" class="pointer-events-none absolute left-0 top-6 text-mute transition-all duration-500 ease-lumen peer-focus:-translate-y-6 peer-focus:text-[11px] peer-[:not(:placeholder-shown)]:-translate-y-6 peer-[:not(:placeholder-shown)]:text-[11px]">Телефон</label>
+          </div>
+          <p class="err mt-2 hidden text-[12px] text-[#A8504A]" data-for="f-phone">Укажите номер полностью, например +7 900 123-45-67</p>
+        </div>
+
+        <div>
+          <div class="f-line">
+            <label for="f-service" class="absolute left-0 top-0 text-[11px] text-mute pointer-events-none">Услуга</label>
+            <select id="f-service" name="service" class="f-select w-full appearance-none bg-transparent border-0 border-b border-ink/25 pt-7 pb-3 pr-8 text-lg outline-none cursor-pointer"></select>
+            <svg class="pointer-events-none absolute right-0 bottom-4" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2B2B2E" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-8 mt-2">
+          <button type="submit" class="group inline-flex items-center justify-center gap-4 rounded-full bg-ink text-pearl pl-9 pr-3 py-3 text-[14px] tracking-[.03em] transition-colors duration-700 ease-lumen hover:bg-rose hover:text-ink">
+            Записаться
+            <span class="grid place-items-center w-10 h-10 rounded-full bg-pearl text-ink transition-transform duration-700 ease-lumen group-hover:translate-x-1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+          </button>
+          <p class="text-[11px] leading-relaxed text-mute max-w-[260px]">Нажимая кнопку, вы соглашаетесь на обработку персональных данных.</p>
+        </div>
+
+        <p id="form-ok" class="hidden rounded-3xl bg-pearl/80 px-6 py-5 text-[15px] leading-relaxed" role="status">
+          Спасибо! Мы получили заявку и перезвоним в&nbsp;течение дня.
+        </p>
+      </form>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ============================== FOOTER ============================== -->
+<footer id="contacts" class="relative overflow-hidden border-t border-ink/10">
+  <div class="relative mx-auto max-w-[1400px] px-5 md:px-10 pt-16 md:pt-24 pb-10 grid gap-12 md:grid-cols-12">
+    <div class="md:col-span-5">
+      <p class="font-serif text-3xl font-medium tracking-[.34em]">LUMEN</p>
+      <p class="mt-5 max-w-xs text-[14px] leading-[1.8] text-ink/65">Клиника премиальной эстетической косметологии. Бережный подход, честные рекомендации.</p>
+    </div>
+    <div class="md:col-span-3 text-[14px] leading-[1.9]">
+      <p class="text-[11px] tracking-[.14em] text-mute mb-3">КОНТАКТЫ</p>
+      <a href="tel:+70000000000" class="block text-lg hover:opacity-60 transition-opacity duration-500">+7 (000) 000-00-00</a>
+      <a href="mailto:hello@lumen-clinic.example" class="block hover:opacity-60 transition-opacity duration-500">hello@lumen-clinic.example</a>
+      <p class="text-ink/65">г. Москва, ул. Примерная, 1</p>
+    </div>
+    <div class="md:col-span-2 text-[14px] leading-[1.9]">
+      <p class="text-[11px] tracking-[.14em] text-mute mb-3">ЧАСЫ РАБОТЫ</p>
+      <p>Пн–Сб 10:00–21:00</p><p class="text-ink/65">Вс 11:00–18:00</p>
+    </div>
+    <nav class="md:col-span-2 text-[14px] leading-[1.9]" aria-label="Навигация в подвале">
+      <p class="text-[11px] tracking-[.14em] text-mute mb-3">РАЗДЕЛЫ</p>
+      <a class="block hover:opacity-60 transition-opacity duration-500" href="#map">Карта красоты</a>
+      <a class="block hover:opacity-60 transition-opacity duration-500" href="#services">Услуги</a>
+      <a class="block hover:opacity-60 transition-opacity duration-500" href="#results">До и после</a>
+      <a class="block hover:opacity-60 transition-opacity duration-500" href="#booking">Запись</a>
+    </nav>
+  </div>
+
+  <p class="select-none pointer-events-none text-center font-serif font-light text-[26vw] leading-[.8] tracking-[.06em] text-powder/70 -mb-[2.2vw]" aria-hidden="true">LUMEN</p>
+
+  <div class="relative border-t border-ink/10 bg-pearl/60">
+    <div class="mx-auto max-w-[1400px] px-5 md:px-10 py-6 text-[11px] leading-relaxed text-mute flex flex-col md:flex-row md:justify-between gap-2">
+      <p>© 2026 LUMEN. ООО «ЛЮМЕН», ИНН 0000000000. Лицензия на медицинскую деятельность № ЛО-00-00-000000.</p>
+      <p>Имеются противопоказания. Необходима консультация специалиста.</p>
+    </div>
+  </div>
+</footer>
+
+
+<script>
+/* =====================================================================
+   LUMEN — скрипты. Каждый модуль независим и подключается в конце файла.
+   ===================================================================== */
+
+/* ---------------------------- Утилиты ---------------------------- */
+const $  = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const easeInOut = t => t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2;
+
+/* Свои фото (необязательно): вставьте ссылки, и рисунки заменятся фотографиями.
+   Для слайдера «До / После» нужны два снимка одинаковых пропорций 4:5. */
+const PHOTOS = { hero: '', before: '', after: '' };
+
+/* ---------------------------- Данные ---------------------------- */
+// Услуги: cat — вкладка; price — «от», ₽ (ориентировочно)
+const SERVICES = [
+  { cat:'inj', name:'Контурная пластика',   text:'Восстановление объёма и чёткости линий филлерами на основе гиалуроновой кислоты.', time:'40–60 мин', price:18000 },
+  { cat:'inj', name:'Ботулинотерапия',      text:'Мягкое расслабление мимических морщин с сохранением естественной мимики.',          time:'30 мин',    price:9000  },
+  { cat:'inj', name:'Биоревитализация',     text:'Глубокое увлажнение и упругость кожи за счёт гиалуроновой кислоты.',                time:'45 мин',    price:12000 },
+  { cat:'inj', name:'Мезотерапия',          text:'Коктейли витаминов и пептидов для тонуса, сияния и ровного цвета лица.',            time:'40 мин',    price:6500  },
+
+  { cat:'hw',  name:'SMAS-лифтинг',         text:'Ультразвуковой лифтинг глубоких слоёв кожи без разрезов и длительной реабилитации.',time:'90 мин',    price:35000 },
+  { cat:'hw',  name:'RF-лифтинг',           text:'Радиоволновое прогревание для упругости кожи и более чёткого овала лица.',          time:'60 мин',    price:9000  },
+  { cat:'hw',  name:'Лазерная шлифовка',    text:'Выравнивание рельефа и тона, мягкое обновление поверхностного слоя кожи.',          time:'60 мин',    price:14000 },
+  { cat:'hw',  name:'Фотоомоложение IPL',   text:'Работа с пигментацией и сосудистым рисунком импульсным светом.',                     time:'45 мин',    price:8000  },
+
+  { cat:'care',name:'Ультразвуковая чистка',text:'Бережное очищение пор и мягкий пилинг без травмирования кожи.',                      time:'60 мин',    price:5500  },
+  { cat:'care',name:'Химический пилинг',    text:'Поверхностное обновление кожи кислотами, подбираем под ваш тип и сезон.',            time:'45 мин',    price:6000  },
+  { cat:'care',name:'Скульптурный массаж',  text:'Лимфодренаж и работа с мышцами лица: свежий цвет и мягкий лифтинг-эффект.',          time:'50 мин',    price:5000  },
+  { cat:'care',name:'Омолаживающий уход',   text:'Сыворотки, маски и ампулы для питания и восстановления барьера кожи.',               time:'75 мин',    price:7000  }
+];
+const TABS = [['inj','Инъекции'], ['hw','Аппаратная косметология'], ['care','Уход']];
+
+// Зоны лица для «Карты красоты». Каждая процедура должна совпадать с названием в SERVICES.
+const ZONES = [
+  { key:'forehead', name:'Лоб', dot:[200,112],
+    shape:'<ellipse cx="200" cy="114" rx="70" ry="30"/>',
+    text:'Здесь раньше всего появляются мимические линии. Работаем деликатно, чтобы лицо оставалось живым.',
+    procs:['Ботулинотерапия','Мезотерапия','Лазерная шлифовка'] },
+  { key:'eyes', name:'Контур глаз', dot:[274,188],
+    shape:'<ellipse cx="167" cy="190" rx="32" ry="18"/><ellipse cx="233" cy="190" rx="32" ry="18"/>',
+    text:'Самая тонкая кожа лица. Для неё важны мягкое увлажнение, питание и снятие усталости.',
+    procs:['Биоревитализация','Мезотерапия','Скульптурный массаж'] },
+  { key:'cheeks', name:'Скулы', dot:[266,242],
+    shape:'<ellipse cx="136" cy="240" rx="28" ry="22"/><ellipse cx="264" cy="240" rx="28" ry="22"/>',
+    text:'Скулы задают архитектуру лица: возвращаем объём и чёткость линий, подтягиваем кожу.',
+    procs:['Контурная пластика','SMAS-лифтинг','RF-лифтинг'] },
+  { key:'lips', name:'Губы', dot:[262,316],
+    shape:'<ellipse cx="200" cy="315" rx="44" ry="24"/>',
+    text:'Подчёркиваем форму и увлажняем, без эффекта «накачанных» губ. Приоритет — естественность.',
+    procs:['Контурная пластика','Биоревитализация'] },
+  { key:'jaw', name:'Овал и подбородок', dot:[246,358],
+    shape:'<path d="M136 318 C150 350 176 370 200 372 C224 370 250 350 264 318 C248 344 224 358 200 358 C176 358 152 344 136 318Z"/>',
+    text:'Чёткий овал — основа молодого лица. Работаем с контуром и тонусом нижней трети.',
+    procs:['SMAS-лифтинг','Контурная пластика','Скульптурный массаж'] },
+  { key:'neck', name:'Шея', dot:[200,426],
+    shape:'<path d="M164 380 C166 410 162 440 154 466 L246 466 C238 440 234 410 236 380 C220 392 180 392 164 380Z"/>',
+    text:'Шея выдаёт возраст не меньше лица. Увлажняем, подтягиваем и выравниваем рельеф.',
+    procs:['Биоревитализация','RF-лифтинг','Мезотерапия'] }
+];
+
+const rub = n => n.toLocaleString('ru-RU') + ' ₽';
+
+/* =====================================================================
+   РИСУНКИ: стилизованный портрет (для героя и слайдера До/После)
+   ===================================================================== */
+function portrait(state, uid) {
+  const after = state === 'after';
+  const c = after
+    ? { bg1:'#FBEDE8', bg2:'#F1D3CC', skin1:'#F8E1D5', skin2:'#EDC8B8', neck:'#E4BAAA', lip1:'#D58484', lip2:'#E19B99', blush:.4,  shirt:'#FFFFFF', hair:'#4A3830' }
+    : { bg1:'#ECE4DB', bg2:'#DACEC2', skin1:'#EBD1C1', skin2:'#DDBAA7', neck:'#D1AA97', lip1:'#C39387', lip2:'#CBA096', blush:.1,  shirt:'#F0EBE5', hair:'#4A3830' };
+  const b = `filter="url(#b${uid})"`;
+
+  // Детали: у «до» — линии, тени и пигмент; у «после» — сияние
+  const marks = after ? `
+    <ellipse cx="138" cy="246" rx="15" ry="7" fill="#fff" opacity=".45" ${b}/>
+    <ellipse cx="262" cy="246" rx="15" ry="7" fill="#fff" opacity=".45" ${b}/>
+    <ellipse cx="200" cy="148" rx="34" ry="8" fill="#fff" opacity=".32" ${b}/>
+    <ellipse cx="199" cy="228" rx="4" ry="16" fill="#fff" opacity=".32" ${b}/>
+    <ellipse cx="200" cy="276" rx="8" ry="2.4" fill="#fff" opacity=".6"/>`
+  : `
+    <g stroke="#A97F6F" stroke-width="1.5" fill="none" opacity=".5" stroke-linecap="round">
+      <path d="M152 138 Q200 131 248 138"/><path d="M148 150 Q200 143 252 150"/><path d="M156 162 Q200 156 244 162"/>
+      <path d="M158 252 Q148 272 160 296"/><path d="M242 252 Q252 272 240 296"/>
+      <path d="M140 214 Q150 220 160 217"/><path d="M260 214 Q250 220 240 217"/>
+    </g>
+    <ellipse cx="162" cy="215" rx="24" ry="7" fill="#9C6F69" opacity=".32" ${b}/>
+    <ellipse cx="238" cy="215" rx="24" ry="7" fill="#9C6F69" opacity=".32" ${b}/>
+    <ellipse cx="258" cy="238" rx="18" ry="12" fill="#D0746C" opacity=".24" ${b}/>
+    <g fill="#9E6650" opacity=".5"><circle cx="150" cy="240" r="1.8"/><circle cx="168" cy="262" r="1.4"/><circle cx="246" cy="226" r="1.8"/><circle cx="232" cy="252" r="1.4"/><circle cx="214" cy="166" r="1.4"/><circle cx="182" cy="160" r="1.6"/><circle cx="270" cy="262" r="1.6"/></g>`;
+
+  return `<svg viewBox="0 0 400 500" preserveAspectRatio="xMidYMid slice" class="w-full h-full block" role="img" aria-label="Иллюстрация: портрет ${after ? 'после' : 'до'} процедур">
+  <defs>
+    <linearGradient id="bg${uid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c.bg1}"/><stop offset="1" stop-color="${c.bg2}"/></linearGradient>
+    <linearGradient id="sk${uid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c.skin1}"/><stop offset="1" stop-color="${c.skin2}"/></linearGradient>
+    <filter id="b${uid}" x="-30%" y="-60%" width="160%" height="220%"><feGaussianBlur stdDeviation="5"/></filter>
+    <radialGradient id="gl${uid}" cx=".3" cy=".15" r=".9"><stop offset="0" stop-color="#fff" stop-opacity="${after ? .55 : .12}"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="400" height="500" fill="url(#bg${uid})"/>
+  <circle cx="200" cy="56" r="36" fill="${c.hair}"/>
+  <path d="M92 222 C80 112 130 52 200 50 C270 52 322 112 308 222 C312 284 300 322 282 344 L118 344 C100 322 88 284 92 222Z" fill="${c.hair}"/>
+  <path d="M168 330 C170 372 166 392 158 408 L242 408 C234 392 230 372 232 330Z" fill="${c.neck}"/>
+  <path d="M0 500 V446 C62 414 132 402 160 396 L240 396 C268 402 338 414 400 446 V500Z" fill="${c.shirt}"/>
+  <ellipse cx="106" cy="208" rx="9" ry="17" fill="${c.skin2}"/><ellipse cx="294" cy="208" rx="9" ry="17" fill="${c.skin2}"/>
+  <path d="M200 76 C256 76 292 120 292 186 C292 252 262 316 200 346 C138 316 108 252 108 186 C108 120 144 76 200 76Z" fill="url(#sk${uid})"/>
+  <path d="M104 198 C100 112 140 66 200 66 C262 66 300 112 296 198 C282 152 252 122 200 120 C148 122 118 152 104 198Z" fill="${c.hair}"/>
+  <ellipse cx="140" cy="252" rx="28" ry="18" fill="#E9A5A0" opacity="${c.blush}" ${b}/>
+  <ellipse cx="260" cy="252" rx="28" ry="18" fill="#E9A5A0" opacity="${c.blush}" ${b}/>
+  ${marks}
+  <g fill="none" stroke="#5A433A" stroke-linecap="round">
+    <path d="M140 178 Q160 167 183 176" stroke-width="3.6" opacity=".8"/><path d="M217 176 Q240 167 260 178" stroke-width="3.6" opacity=".8"/>
+    <path d="M142 197 Q162 211 184 197" stroke-width="2.4"/><path d="M216 197 Q238 211 258 197" stroke-width="2.4"/>
+  </g>
+  <path d="M200 198 C198 224 194 240 189 252 Q200 260 211 252" fill="none" stroke="#C99E8D" stroke-width="2" stroke-linecap="round"/>
+  <path d="M172 282 C184 272 194 272 200 278 C206 272 216 272 228 282 C216 290 184 290 172 282Z" fill="${c.lip1}"/>
+  <path d="M172 282 C186 306 214 306 228 282 C214 290 186 290 172 282Z" fill="${c.lip2}"/>
+  <rect width="400" height="500" fill="url(#gl${uid})"/>
+</svg>`;
+}
+// Вставка: фото (если задано) или рисунок
+const artHTML = (url, state, uid) => url
+  ? `<img src="${url}" alt="" class="w-full h-full object-cover" loading="lazy">`
+  : portrait(state, uid);
+
+/* =====================================================================
+   МОДУЛЬ: шапка (матовое стекло при прокрутке) и мобильное меню
+   ===================================================================== */
+(function initHeader() {
+  const header = $('#header'), burger = $('#burger'), menu = $('#menu');
+
+  const onScroll = () => header.classList.toggle('is-stuck', scrollY > 24);
+  addEventListener('scroll', onScroll, { passive:true }); onScroll();
+
+  function setMenu(open) {
+    burger.setAttribute('aria-expanded', String(open));
+    burger.setAttribute('aria-label', open ? 'Закрыть меню' : 'Открыть меню');
+    menu.classList.toggle('open', open);
+    menu.setAttribute('aria-hidden', String(!open));
+    document.documentElement.style.overflow = open ? 'hidden' : '';
+  }
+  burger.addEventListener('click', () => setMenu(burger.getAttribute('aria-expanded') !== 'true'));
+  $$('a', menu).forEach(a => a.addEventListener('click', () => setMenu(false)));
+  addEventListener('keydown', e => { if (e.key === 'Escape') setMenu(false); });
+  matchMedia('(min-width:1024px)').addEventListener('change', e => { if (e.matches) setMenu(false); });
+})();
+
+/* =====================================================================
+   МОДУЛЬ: появление блоков при скролле (Intersection Observer)
+   ===================================================================== */
+(function initReveal() {
+  const items = $$('[data-reveal]');
+  if (!('IntersectionObserver' in window)) { items.forEach(i => i.classList.add('in')); return; }
+  const io = new IntersectionObserver(entries => entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+  }), { threshold:.12, rootMargin:'0px 0px -6% 0px' });
+  items.forEach(i => io.observe(i));
+})();
+
+/* =====================================================================
+   МОДУЛЬ: герой — портрет в арке
+   ===================================================================== */
+(function initHero() {
+  $('#hero-art').innerHTML = artHTML(PHOTOS.hero, 'after', 'hero');
+})();
+
+/* =====================================================================
+   МОДУЛЬ: «Карта красоты» — SVG лица и описание зон
+   ===================================================================== */
+(function initBeautyMap() {
+  const face = $('#face'), tabs = $('#zone-tabs'), panel = $('#zone-panel');
+  const elNum = $('#zone-num'), elTitle = $('#zone-title'), elText = $('#zone-text'), elProcs = $('#zone-procs');
+
+  // Тонкий line-art лица анфас
+  const line = `<g fill="none" stroke="#2B2B2E" stroke-opacity=".72" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M92 176 C88 92 136 38 200 38 C264 38 312 92 308 176"/>
+    <path d="M200 56 C262 56 304 104 304 178 C304 236 290 286 262 330 C246 354 224 372 200 376 C176 372 154 354 138 330 C110 286 96 236 96 178 C96 104 138 56 200 56Z"/>
+    <path d="M97 196 C80 196 78 238 99 246"/><path d="M303 196 C320 196 322 238 301 246"/>
+    <path d="M138 156 C152 146 176 146 188 154"/><path d="M212 154 C224 146 248 146 262 156"/>
+    <path d="M144 186 Q166 170 190 186 Q166 198 144 186Z"/><circle cx="167" cy="185" r="4.5"/>
+    <path d="M210 186 Q234 170 256 186 Q234 198 210 186Z"/><circle cx="233" cy="185" r="4.5"/>
+    <path d="M197 192 C195 226 189 246 184 260 Q200 272 216 260 Q212 246 206 226"/>
+    <path d="M168 308 C180 297 190 297 200 303 C210 297 220 297 232 308 C220 320 180 320 168 308Z"/>
+    <path d="M168 308 C182 332 218 332 232 308" stroke-opacity=".5"/>
+    <path d="M122 232 C132 266 152 292 178 306" stroke-opacity=".22"/><path d="M278 232 C268 266 248 292 222 306" stroke-opacity=".22"/>
+    <path d="M162 358 C164 410 160 442 150 470"/><path d="M238 358 C236 410 240 442 250 470"/>
+    <path d="M150 470 C110 484 70 498 38 522"/><path d="M250 470 C290 484 330 498 362 522"/>
+    <path d="M150 470 Q200 500 250 470" stroke-opacity=".4"/>
+  </g>`;
+
+  // Зоны: невидимые области + нумерованные точки
+  const zonesSvg = ZONES.map((z, i) => `
+    <g class="zone" data-key="${z.key}" tabindex="0" role="button" aria-label="${z.name}">
+      <g class="z-shape">${z.shape}</g>
+      <circle class="z-ring" cx="${z.dot[0]}" cy="${z.dot[1]}" r="11"/>
+      <circle class="z-dot" cx="${z.dot[0]}" cy="${z.dot[1]}" r="11"/>
+      <text class="z-num" x="${z.dot[0]}" y="${z.dot[1] + 3.4}" text-anchor="middle">${String(i+1).padStart(2,'0')}</text>
+    </g>`).join('');
+  face.innerHTML = line + zonesSvg;
+  // Области зон нужны для наведения, а не как обводка
+  $$('.z-shape > *', face).forEach(s => { s.style.fill = 'inherit'; s.style.stroke = 'inherit'; s.style.pointerEvents = 'all'; });
+  $$('.z-shape', face).forEach(s => s.style.pointerEvents = 'all');
+
+  // Вкладки-кнопки (для клавиатуры и телефонов)
+  tabs.innerHTML = ZONES.map(z =>
+    `<button role="tab" data-key="${z.key}" aria-selected="false" class="zt shrink-0 rounded-full border border-ink/15 px-5 py-2.5 text-[13px] tracking-[.03em] transition-all duration-700 ease-lumen hover:border-ink">${z.name}</button>`).join('');
+
+  let current = null, userTouched = false, swapTimer = null;
+
+  function activate(key, fromUser) {
+    if (fromUser) userTouched = true;
+    if (key === current) return;
+    current = key;
+    const z = ZONES.find(x => x.key === key), idx = ZONES.indexOf(z);
+
+    $$('.zone', face).forEach(g => g.classList.toggle('active', g.dataset.key === key));
+    $$('.zt', tabs).forEach(b => {
+      const on = b.dataset.key === key;
+      b.setAttribute('aria-selected', String(on));
+      b.classList.toggle('bg-ink', on); b.classList.toggle('text-pearl', on); b.classList.toggle('border-ink', on);
+    });
+
+    // Плавная смена описания: скрыть → заменить → показать
+    panel.classList.add('swap');
+    clearTimeout(swapTimer);
+    swapTimer = setTimeout(() => {
+      elNum.textContent = String(idx + 1).padStart(2, '0');
+      elTitle.textContent = z.name;
+      elText.textContent = z.text;
+      elProcs.innerHTML = z.procs.map(p => `
+        <li><button type="button" data-service="${p}" class="group w-full flex items-center justify-between gap-4 border-b border-ink/10 py-4 text-left transition-colors duration-700 ease-lumen hover:text-[#B97F78]">
+          <span class="font-serif text-2xl md:text-3xl font-light">${p}</span>
+          <span class="flex items-center gap-3 text-[12px] text-mute">Записаться
+            <svg class="transition-transform duration-700 ease-lumen group-hover:translate-x-1" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        </button></li>`).join('');
+      panel.classList.remove('swap');
+    }, REDUCE ? 0 : 320);
+  }
+
+  // Наведение, фокус и клик по зонам лица
+  $$('.zone', face).forEach(g => {
+    g.addEventListener('pointerenter', () => activate(g.dataset.key, true));
+    g.addEventListener('focus', () => activate(g.dataset.key, true));
+    g.addEventListener('click', () => activate(g.dataset.key, true));
+    g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(g.dataset.key, true); } });
+  });
+  tabs.addEventListener('click', e => { const b = e.target.closest('.zt'); if (b) activate(b.dataset.key, true); });
+
+  // Выбор процедуры → переход к записи с подставленной услугой
+  elProcs.addEventListener('click', e => {
+    const b = e.target.closest('[data-service]'); if (b) window.bookService(b.dataset.service);
+  });
+
+  activate(ZONES[2].key, false);
+
+  // Мягкая автоподсветка зон, пока пользователь сам ничего не трогал
+  if (!REDUCE) {
+    let visible = false;
+    new IntersectionObserver(es => { visible = es[0].isIntersecting; }, { threshold:.35 }).observe(face);
+    setInterval(() => {
+      if (userTouched || !visible || document.hidden) return;
+      const i = ZONES.findIndex(z => z.key === current);
+      activate(ZONES[(i + 1) % ZONES.length].key, false);
+    }, 3600);
+  }
+})();
+
+/* =====================================================================
+   МОДУЛЬ: каталог услуг — вкладки с плавной фильтрацией
+   ===================================================================== */
+(function initServices() {
+  const tabsBox = $('#svc-tabs'), ind = $('#svc-ind'), grid = $('#svc-grid');
+  const TINTS = ['bg-powder/60', 'bg-pearl', 'bg-sand/35', 'bg-rose/25'];
+  let active = TABS[0][0];
+
+  // Вкладки
+  tabsBox.insertAdjacentHTML('beforeend', TABS.map(([k, t]) =>
+    `<button role="tab" data-cat="${k}" aria-selected="false" class="st relative z-10 rounded-full px-5 md:px-7 py-3 text-[13px] tracking-[.03em] transition-colors duration-700 ease-lumen">${t}</button>`).join(''));
+
+  // Карточки (все сразу, неактивные скрыты)
+  grid.innerHTML = SERVICES.map((s, i) => {
+    const n = SERVICES.filter(x => x.cat === s.cat).indexOf(s);
+    return `<article class="svc ${TINTS[n % 4]} rounded-[28px] md:rounded-[36px] p-7 md:p-8 flex flex-col min-h-[380px]" data-cat="${s.cat}">
+      <p class="font-serif italic text-2xl text-[#B97F78]">${String(n + 1).padStart(2, '0')}</p>
+      <h3 class="mt-6 font-serif font-light text-[30px] xl:text-[32px] leading-[1.08] break-words hyphens-auto" lang="ru">${s.name}</h3>
+      <p class="mt-4 text-[14px] leading-[1.75] text-ink/65">${s.text}</p>
+      <div class="mt-auto pt-8">
+        <p class="text-[12px] text-mute">${s.time}</p>
+        <div class="mt-2 flex items-end justify-between gap-3 border-t border-ink/10 pt-4">
+          <p class="font-serif text-[28px] font-light leading-none">от ${rub(s.price)}</p>
+          <button type="button" data-service="${s.name}" class="book grid place-items-center w-11 h-11 rounded-full border border-ink/20 transition-colors duration-700 ease-lumen hover:bg-ink hover:text-pearl" aria-label="Записаться: ${s.name}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </article>`;
+  }).join('');
+
+  const cards = $$('.svc', grid), btns = $$('.st', tabsBox);
+
+  // Положение скользящего индикатора под активной вкладкой
+  function moveIndicator() {
+    const b = btns.find(x => x.dataset.cat === active);
+    ind.style.width = b.offsetWidth + 'px';
+    ind.style.transform = `translateX(${b.offsetLeft - 6}px)`;
+  }
+
+  // Показать вкладку: старые карточки гаснут, новые поднимаются по очереди
+  function show(cat, instant) {
+    active = cat;
+    btns.forEach(b => {
+      const on = b.dataset.cat === cat;
+      b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1;
+      b.classList.toggle('text-pearl', on);
+    });
+    moveIndicator();
+
+    const apply = () => {
+      let k = 0;
+      cards.forEach(c => {
+        const on = c.dataset.cat === cat;
+        c.style.display = on ? '' : 'none';
+        if (on) {
+          c.style.setProperty('--sd', (k++ * 0.08) + 's');
+          c.classList.add('is-out');
+          requestAnimationFrame(() => requestAnimationFrame(() => c.classList.remove('is-out')));
+        }
+      });
+    };
+    if (instant || REDUCE) { apply(); return; }
+    cards.forEach(c => { if (c.style.display !== 'none') c.classList.add('is-out'); });
+    setTimeout(apply, 380);
+  }
+
+  tabsBox.addEventListener('click', e => { const b = e.target.closest('.st'); if (b && b.dataset.cat !== active) show(b.dataset.cat); });
+  // Стрелки влево/вправо переключают вкладки
+  tabsBox.addEventListener('keydown', e => {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    const i = btns.findIndex(b => b.dataset.cat === active);
+    const next = btns[(i + (e.key === 'ArrowRight' ? 1 : btns.length - 1)) % btns.length];
+    next.focus(); show(next.dataset.cat);
+  });
+  grid.addEventListener('click', e => { const b = e.target.closest('.book'); if (b) window.bookService(b.dataset.service); });
+
+  show(active, true);
+  addEventListener('resize', moveIndicator);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(moveIndicator);
+})();
+
+/* =====================================================================
+   МОДУЛЬ: слайдер «До / После»
+   ===================================================================== */
+(function initBeforeAfter() {
+  const box = $('#ba');
+  $('#ba-before').innerHTML = artHTML(PHOTOS.before, 'before', 'bf');
+  $('#ba-after').innerHTML  = artHTML(PHOTOS.after,  'after',  'af');
+
+  let pos = 50, dragging = false, introRaf = 0;
+  const setPos = p => {
+    pos = clamp(p, 0, 100);
+    box.style.setProperty('--pos', pos + '%');
+    box.setAttribute('aria-valuenow', Math.round(pos));
+  };
+  const fromEvent = e => { const r = box.getBoundingClientRect(); setPos((e.clientX - r.left) / r.width * 100); };
+  const stopIntro = () => cancelAnimationFrame(introRaf);
+
+  // Перетаскивание мышью, пальцем и пером
+  box.addEventListener('pointerdown', e => { stopIntro(); dragging = true; box.setPointerCapture(e.pointerId); fromEvent(e); });
+  box.addEventListener('pointermove', e => { if (dragging) fromEvent(e); });
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => box.addEventListener(t, () => { dragging = false; }));
+
+  // Управление с клавиатуры
+  box.addEventListener('keydown', e => {
+    const step = e.shiftKey ? 15 : 5;
+    if (e.key === 'ArrowLeft')  { e.preventDefault(); stopIntro(); setPos(pos - step); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); stopIntro(); setPos(pos + step); }
+    if (e.key === 'Home')       { e.preventDefault(); stopIntro(); setPos(0); }
+    if (e.key === 'End')        { e.preventDefault(); stopIntro(); setPos(100); }
+  });
+
+  // Короткая подсказка при первом показе: ползунок плавно «проезжает» к центру
+  setPos(REDUCE ? 50 : 96);
+  if (!REDUCE) {
+    const io = new IntersectionObserver(es => {
+      if (!es[0].isIntersecting) return;
+      io.disconnect();
+      const t0 = performance.now(), from = 96, to = 50, dur = 1800;
+      const tick = now => {
+        const t = clamp((now - t0) / dur, 0, 1);
+        setPos(from + (to - from) * easeInOut(t));
+        if (t < 1) introRaf = requestAnimationFrame(tick);
+      };
+      setTimeout(() => { introRaf = requestAnimationFrame(tick); }, 500);
+    }, { threshold:.45 });
+    io.observe(box);
+  }
+})();
+
+/* =====================================================================
+   МОДУЛЬ: форма записи — маска телефона и проверка
+   ===================================================================== */
+(function initForm() {
+  const form = $('#lead-form'), name = $('#f-name'), phone = $('#f-phone'), select = $('#f-service'), ok = $('#form-ok');
+
+  select.innerHTML = '<option value="Консультация">Консультация: подберём процедуру</option>' +
+    TABS.map(([k, t]) => `<optgroup label="${t}">${SERVICES.filter(s => s.cat === k).map(s => `<option value="${s.name}">${s.name}</option>`).join('')}</optgroup>`).join('');
+
+  // Маска +7 (XXX) XXX-XX-XX
+  const mask = () => {
+    let d = phone.value.replace(/\D/g, '');
+    if (d.startsWith('8')) d = '7' + d.slice(1);
+    if (d && !d.startsWith('7')) d = '7' + d;
+    d = d.slice(0, 11);
+    phone.value = d ? ['+7', d.length > 1 && ' (' + d.slice(1, 4), d.length > 4 && ') ' + d.slice(4, 7), d.length > 7 && '-' + d.slice(7, 9), d.length > 9 && '-' + d.slice(9, 11)].filter(Boolean).join('') : '';
+  };
+  phone.addEventListener('input', mask);
+
+  const setErr = (id, bad) => {
+    $(`.err[data-for="${id}"]`).classList.toggle('hidden', !bad);
+    $('#' + id).setAttribute('aria-invalid', String(bad));
+  };
+  [name, phone].forEach(el => el.addEventListener('input', () => setErr(el.id, false)));
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const badName  = name.value.trim().length < 2;
+    const badPhone = phone.value.replace(/\D/g, '').length < 11;
+    setErr('f-name', badName); setErr('f-phone', badPhone);
+    if (badName || badPhone) { (badName ? name : phone).focus(); return; }
+
+    // Здесь подключается отправка в CRM: fetch('/api/lead', { method:'POST', body: JSON.stringify(...) })
+    console.log('Заявка:', { name:name.value.trim(), phone:phone.value, service:select.value });
+    ok.classList.remove('hidden');
+    form.reset();
+  });
+
+  // Глобальная функция: выбрать услугу и перейти к форме (вызывается из карты и каталога)
+  window.bookService = title => {
+    const opt = [...select.options].find(o => o.value === title);
+    select.value = opt ? opt.value : 'Консультация';
+    ok.classList.add('hidden');
+    $('#booking').scrollIntoView({ behavior: REDUCE ? 'auto' : 'smooth', block:'center' });
+    setTimeout(() => name.focus({ preventScroll:true }), REDUCE ? 0 : 800);
+  };
+})();
+</script>
+</body>
+</html>
