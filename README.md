@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="banner.svg" alt="LUMEN — клиника премиальной эстетической косметологии" width="100%">
+  <img src="Lumenbanner.svg" alt="LUMEN — клиника премиальной эстетической косметологии" width="100%">
 </p>
 
 <h3 align="center">Свет, который остаётся с вами</h3>
