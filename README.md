@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://ВАШ-НИК.github.io/ИМЯ-РЕПОЗИТОРИЯ/"><b>Открыть живую версию →</b></a>
+  <a href="lumen-production-1ccb.up.railway.app"><b>Открыть живую версию →</b></a>
 </p>
 
 <p align="center">
